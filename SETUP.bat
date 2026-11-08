@@ -26,11 +26,8 @@ echo.
 
 set /p SYS_PWD=Type your Oracle SYSTEM password and press Enter: 
 
-REM Find the database name. Oracle Free uses FREEPDB1, Oracle XE uses XEPDB1.
-set TV_SERVICE=FREEPDB1
-echo exit | sqlplus -L -S system/%SYS_PWD%@localhost:1521/%TV_SERVICE% >nul
-if not errorlevel 1 goto found
-set TV_SERVICE=XEPDB1
+REM Oracle 21c Enterprise uses ORCL service
+set TV_SERVICE=orclpdb
 echo exit | sqlplus -L -S system/%SYS_PWD%@localhost:1521/%TV_SERVICE% >nul
 if not errorlevel 1 goto found
 
