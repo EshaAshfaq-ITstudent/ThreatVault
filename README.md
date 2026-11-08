@@ -172,16 +172,6 @@ SELECT pkg_soc.open_incident_count FROM dual;
 | Audit page section 3 is empty | Oracle may write unified audit records a bit later. As SYSTEM run `EXEC DBMS_AUDIT_MGMT.FLUSH_UNIFIED_AUDIT_TRAIL;` |
 | Start over | `sqlplus system/PASSWORD@localhost:1521/XEPDB1 @sql/uninstall.sql`, then install again. |
 
-## Push to GitHub
 
-```bat
-cd threatvault
-git init
-git add .
-git commit -m "ThreatVault DBA project"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/threatvault.git
-git push -u origin main
-```
 
 `node_modules`, `.env` and the generated CSV files are ignored by `.gitignore`. Each member runs `npm install` and `npm run generate` after cloning.
