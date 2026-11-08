@@ -1,0 +1,86 @@
+<%- include('partials/header') %>
+<header class="page-head">
+  <div>
+    <h1><%- icon('settings', 'head-ico') %>Admin</h1>
+    <p class="muted">DBA controls: detection, materialized view refresh, replication, partitions, users.</p>
+  </div>
+</header>
+
+<section class="grid four">
+  <form class="panel" method="post" action="/admin/detect">
+    <h3><%- icon('radar') %> Run detection</h3>
+    <p class="muted small"><code>pkg_soc.run_detection</code> reads all sites and opens incidents.</p>
+    <label>Look back
+      <select name="days"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option></select>
+    </label>
+    <button class="btn primary"><%- icon('play') %>Run detection</button>
+  </form>
+  <form class="panel" method="post" action="/admin/refresh">
+    <h3><%- icon('refresh-cw') %> Refresh summary</h3>
+    <p class="muted small">Refreshes <code>MV_DAILY_ATTACKS</code>. Last refresh: <strong><%= mv ? fmt(mv.last_refresh_date) : 'never' %></strong></p>
+    <button class="btn">Refresh now</button>
+  </form>
+  <form class="panel" method="post" action="/admin/sync">
+    <h3><%- icon('share-2') %> Replicate rules</h3>
+    <p class="muted small">Central has <%= ruleRep.central %> rules. Copies: KHI <%= ruleRep.khi %>, LHR <%= ruleRep.lhr %>, ISB <%= ruleRep.isb %>.<br>Last sync: <%= fmt(ruleRep.synced_at) %></p>
+    <button class="btn">Sync to sites</button>
+  </form>
+  <form class="panel danger-zone" method="post" action="/admin/tamper">
+    <h3><%- icon('trash-2') %> Audit demo</h3>
+    <p class="muted small">Acts like an insider deleting one log row. The Audit page will show it.</p>
+    <select name="site"><option>KHI</option><option>LHR</option><option>ISB</option></select>
+    <button class="btn danger">Delete one log row</button>
+  </form>
+</section>
+
+<section class="grid two">
+  <div class="panel flush">
+    <h3 class="pad">Partitions per site <small class="muted">(user_tab_partitions over DB links)</small></h3>
+    <table>
+      <thead><tr><th>Site</th><th>Partitions in LOG_EVENT</th></tr></thead>
+      <tbody><% partitions.forEach(function (p) { %><tr><td><%= p.site %></td><td><%= p.partitions %></td></tr><% }) %></tbody>
+    </table>
+    <h3 class="pad">Rows per day (one partition each)</h3>
+    <table class="dense">
+      <thead><tr><th>Day</th><th>KHI</th><th>LHR</th><th>ISB</th></tr></thead>
+      <tbody><% perDay.forEach(function (d) { %><tr><td><%= fmtDay(d.attack_day) %></td><td><%= num(d.khi) %></td><td><%= num(d.lhr) %></td><td><%= num(d.isb) %></td></tr><% }) %></tbody>
+    </table>
+  </div>
+
+  <div>
+    <div class="panel flush">
+      <h3 class="pad">Detection rules <small class="muted">(changes are audited and replicated)</small></h3>
+      <table>
+        <thead><tr><th>Rule</th><th>Event</th><th>Type</th><th>Severity</th><th>Threshold / hour</th><th>Active</th><th></th></tr></thead>
+        <tbody>
+        <% rules.forEach(function (r) { %>
+          <tr>
+            <td><%= r.rule_name %></td><td><%= r.event_type %></td><td><%= r.incident_type %></td>
+            <td><%- include('partials/sev', { s: r.severity }) %></td>
+            <td><input form="rule-<%= r.rule_id %>" class="tiny-input" type="number" min="1" name="threshold" value="<%= r.threshold %>"></td>
+            <td><select form="rule-<%= r.rule_id %>" name="active"><option <%= r.active === 'Y' ? 'selected' : '' %>>Y</option><option <%= r.active === 'N' ? 'selected' : '' %>>N</option></select></td>
+            <td><form id="rule-<%= r.rule_id %>" method="post" action="/admin/rules/<%= r.rule_id %>"><button class="btn tiny">Save</button></form></td>
+          </tr>
+        <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel flush">
+      <h3 class="pad">Users</h3>
+      <table>
+        <thead><tr><th>Username</th><th>Role</th><th>Analyst</th><th>Created</th></tr></thead>
+        <tbody><% users.forEach(function (x) { %><tr><td><%= x.username %></td><td><%= x.role %></td><td><%= x.full_name || '' %></td><td><%= fmtDay(x.created_at) %></td></tr><% }) %></tbody>
+      </table>
+      <form class="row pad" method="post" action="/admin/users">
+        <input name="username" placeholder="username" required>
+        <input name="password" type="password" placeholder="password" required>
+        <select name="role"><option>ANALYST</option><option>ADMIN</option></select>
+        <select name="analyst_id"><option value="">No analyst</option>
+          <% analysts.forEach(function (a) { %><option value="<%= a.analyst_id %>"><%= a.full_name %></option><% }) %></select>
+        <button class="btn primary"><%- icon('user-plus') %>Add user</button>
+      </form>
+    </div>
+  </div>
+</section>
+<%- include('partials/footer') %>

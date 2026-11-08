@@ -1,0 +1,46 @@
+<%- include('partials/header') %>
+<header class="page-head">
+  <div>
+    <h1><%- icon('chart-column', 'head-ico') %>Reports</h1>
+    <p class="muted">Each report shows one course concept. The SQL is shown so you can explain it in the demo.</p>
+  </div>
+</header>
+
+<div class="report-layout">
+  <nav class="report-list">
+    <% let lastLab = ''; reports.forEach(function (r) {
+         if (r.lab !== lastLab) { lastLab = r.lab; %><div class="group"><%= r.lab %></div><% } %>
+      <a href="/reports?r=<%= r.key %>" class="<%= r.key === report.key ? 'active' : '' %>"><%= r.title %></a>
+    <% }) %>
+  </nav>
+
+  <div>
+    <section class="panel">
+      <span class="pill"><%= report.lab %></span>
+      <h2><%= report.title %></h2>
+      <p><%= report.explain %></p>
+      <pre class="sql"><%= report.sql %></pre>
+    </section>
+
+    <section class="panel flush">
+      <% if (error) { %>
+        <p class="flash error"><%= error %></p>
+      <% } else if (!rows.length) { %>
+        <p class="empty">No rows returned.</p>
+      <% } else { const cols = Object.keys(rows[0]); %>
+        <div class="source-note pad"><%= rows.length %> rows</div>
+        <table>
+          <thead><tr><% cols.forEach(function (c) { %><th><%= c %></th><% }) %></tr></thead>
+          <tbody>
+          <% rows.forEach(function (r) { %>
+            <tr class="<%= Object.values(r).includes('ALL') ? 'total-row' : '' %>">
+              <% cols.forEach(function (c) { %><td><%= r[c] instanceof Date ? fmtDay(r[c]) : r[c] %></td><% }) %>
+            </tr>
+          <% }) %>
+          </tbody>
+        </table>
+      <% } %>
+    </section>
+  </div>
+</div>
+<%- include('partials/footer') %>

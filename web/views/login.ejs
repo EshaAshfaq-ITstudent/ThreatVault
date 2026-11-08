@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log in | ThreatVault</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="login-page">
+  <section class="login-art">
+    <a class="brand" href="/login"><%- include('partials/brand') %>ThreatVault</a>
+    <div>
+      <h1>Every attack on Karachi, Lahore and Islamabad, in one place.</h1>
+      <p>Logs from three offices are loaded, split by site and day, checked for attacks and kept as evidence in Oracle.</p>
+      <%- attackMap(origins, { labels: false }) %>
+    </div>
+    <div class="login-foot">ITL 327 Database Administration project by Esha Ashfaq, Maham Imran and Mujtaba</div>
+  </section>
+  <section class="login-form">
+    <form class="login-card" method="post" action="/login">
+      <h2>Log in</h2>
+      <p class="muted">Use your SOC analyst account.</p>
+      <% if (error) { %><div class="flash error"><%- icon('triangle-alert') %><span><%= error %></span></div><% } %>
+      <label>Username<input name="username" value="<%= username %>" autocomplete="username" autofocus required></label>
+      <label>Password<input type="password" name="password" autocomplete="current-password" required></label>
+      <button class="btn primary wide" type="submit"><%- icon('lock') %>Log in</button>
+      <p class="hint">Demo accounts: <code>admin</code> / <code>admin123</code>, or <code>esha</code> / <code>analyst123</code></p>
+    </form>
+  </section>
+</div>
+</body>
+</html>

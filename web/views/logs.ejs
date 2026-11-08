@@ -1,0 +1,70 @@
+<%- include('partials/header') %>
+<header class="page-head">
+  <div>
+    <h1><%- icon('scroll-text', 'head-ico') %>Security logs</h1>
+    <p class="muted">One day at a time. Because <code>LOG_EVENT</code> is partitioned by day, Oracle reads only that day's partition (partition pruning).</p>
+  </div>
+</header>
+
+<form class="filters" method="get" action="/logs">
+  <label>Site
+    <select name="site">
+      <option value="">All sites</option>
+      <% ['KHI', 'LHR', 'ISB'].forEach(function (s) { %><option <%= f.site === s ? 'selected' : '' %>><%= s %></option><% }) %>
+    </select>
+  </label>
+  <label>Day
+    <select name="day">
+      <% if (!dayList.includes(f.day)) { %><option selected><%= f.day %></option><% } %>
+      <% dayList.forEach(function (d) { %><option <%= f.day === d ? 'selected' : '' %>><%= d %></option><% }) %>
+    </select>
+  </label>
+  <label>Event type
+    <select name="type">
+      <option value="">Any</option>
+      <% eventTypes.forEach(function (t) { %><option <%= f.type === t ? 'selected' : '' %>><%= t %></option><% }) %>
+    </select>
+  </label>
+  <label>Source IP<input name="ip" value="<%= f.ip %>" placeholder="e.g. 45.12.8.9"></label>
+  <button class="btn primary"><%- icon('search') %>Show logs</button>
+</form>
+
+<div class="source-note"><%- icon('database') %>Reading from: <code><%= source %></code>, <strong><%= num(total) %></strong> rows match</div>
+
+<section class="panel flush">
+  <% if (!rows.length) { %>
+    <p class="empty">No log rows for this filter. Did you load the CSV files? See README step 4.</p>
+  <% } else { %>
+  <table class="dense">
+    <thead><tr><th>Time</th><th>Site</th><th>Asset</th><th>Source IP</th><th>Country</th><th>Port</th><th>Event</th><th>Action</th><th>User</th><th>Detail</th></tr></thead>
+    <tbody>
+    <% rows.forEach(function (r) { %>
+      <tr>
+        <td class="mono"><%= fmt(r.event_time) %></td>
+        <td><%= r.site_code %></td>
+        <td><%= r.asset_id %></td>
+        <td class="mono"><a href="/logs?day=<%= f.day %>&ip=<%= r.src_ip %>"><%= r.src_ip %></a>
+          <% if (r.blocked === 'Y') { %><span class="badge sev-critical" title="In blocklist">Blocked</span><% } %></td>
+        <td><%= r.src_country %></td>
+        <td><%= r.dst_port %></td>
+        <td><span class="ev ev-<%= r.event_type.toLowerCase() %>"><%= r.event_type %></span></td>
+        <td><%= r.action %></td>
+        <td><%= r.username %></td>
+        <td class="trunc" title="<%= r.detail %>"><%= r.detail %></td>
+      </tr>
+    <% }) %>
+    </tbody>
+  </table>
+  <% } %>
+</section>
+
+<% const pages = Math.ceil(total / pageSize);
+   if (pages > 1) {
+     const q = 'site=' + f.site + '&day=' + f.day + '&type=' + f.type + '&ip=' + encodeURIComponent(f.ip); %>
+  <div class="pager">
+    <% if (f.page > 1) { %><a class="btn small ghost" href="/logs?<%= q %>&page=<%= f.page - 1 %>">Previous</a><% } %>
+    <span>Page <%= f.page %> of <%= pages %></span>
+    <% if (f.page < pages) { %><a class="btn small ghost" href="/logs?<%= q %>&page=<%= f.page + 1 %>">Next</a><% } %>
+  </div>
+<% } %>
+<%- include('partials/footer') %>

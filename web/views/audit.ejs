@@ -1,0 +1,60 @@
+<%- include('partials/header') %>
+<header class="page-head">
+  <div>
+    <h1><%- icon('file-search', 'head-ico') %>Audit trail</h1>
+    <p class="muted">Two levels of auditing: application level (triggers write to our own tables) and database level (Oracle unified audit policy).</p>
+  </div>
+</header>
+
+<section class="panel flush">
+  <h3 class="pad">1. Application audit: <code>AUDIT_LOG</code> <small class="muted">(triggers on incidents, blocklist, rules)</small></h3>
+  <% if (!appLog.length) { %><p class="empty">Nothing recorded yet.</p><% } else { %>
+  <table class="dense">
+    <thead><tr><th>Time</th><th>Table</th><th>Action</th><th>Record</th><th>Old value</th><th>New value</th><th>DB user</th><th>App user</th></tr></thead>
+    <tbody>
+    <% appLog.forEach(function (r) { %>
+      <tr><td class="mono"><%= fmt(r.log_time) %></td><td><%= r.table_name %></td>
+          <td><span class="act act-<%= r.action.toLowerCase() %>"><%= r.action %></span></td>
+          <td class="mono"><%= r.record_id %></td><td class="trunc"><%= r.old_value %></td><td class="trunc"><%= r.new_value %></td>
+          <td><%= r.db_user %></td><td><strong><%= r.app_user %></strong></td></tr>
+    <% }) %>
+    </tbody>
+  </table>
+  <% } %>
+</section>
+
+<section class="panel flush">
+  <h3 class="pad">2. Site log tampering: <code>LOG_CHANGE_AUDIT</code> <small class="muted">(trigger at each site, read over DB links)</small></h3>
+  <% if (siteError) { %><p class="flash error"><%= siteError %></p>
+  <% } else if (!siteLog.length) { %><p class="empty">No log rows were changed or deleted. Try the "Audit demo" button on the Admin page.</p>
+  <% } else { %>
+  <table class="dense">
+    <thead><tr><th>When</th><th>Site</th><th>Change</th><th>Event id</th><th>Source IP</th><th>Event time</th><th>DB user</th><th>OS user</th></tr></thead>
+    <tbody>
+    <% siteLog.forEach(function (r) { %>
+      <tr><td class="mono"><%= fmt(r.changed_at) %></td><td><%= r.site_code %></td>
+          <td><span class="act act-delete"><%= r.change_type %></span></td><td><%= r.event_id %></td>
+          <td class="mono"><%= r.src_ip %></td><td><%= fmt(r.event_time) %></td><td><%= r.db_user %></td><td><%= r.os_user %></td></tr>
+    <% }) %>
+    </tbody>
+  </table>
+  <% } %>
+</section>
+
+<section class="panel flush">
+  <h3 class="pad">3. Database audit: <code>UNIFIED_AUDIT_TRAIL</code> <small class="muted">(policy TV_EVIDENCE_POLICY)</small></h3>
+  <% if (unifiedError) { %><p class="flash error"><%= unifiedError %></p>
+  <% } else if (!unified.length) { %><p class="empty">No records yet. Oracle may write them with a short delay.</p>
+  <% } else { %>
+  <table class="dense">
+    <thead><tr><th>Time</th><th>DB user</th><th>Action</th><th>Schema</th><th>Object</th><th>Policy</th></tr></thead>
+    <tbody>
+    <% unified.forEach(function (r) { %>
+      <tr><td class="mono"><%= fmt(r.event_time) %></td><td><%= r.dbusername %></td><td><%= r.action_name %></td>
+          <td><%= r.object_schema %></td><td><%= r.object_name %></td><td><%= r.unified_audit_policies %></td></tr>
+    <% }) %>
+    </tbody>
+  </table>
+  <% } %>
+</section>
+<%- include('partials/footer') %>

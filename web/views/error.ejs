@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title><%= title %> | ThreatVault</title><link rel="stylesheet" href="/css/style.css"></head>
+<body>
+<div class="error-page">
+  <div class="error-card">
+    <h2><%= title %></h2>
+    <p class="error-text"><%= message %></p>
+    <% if (typeof hint !== 'undefined' && hint) { %><p class="muted"><%= hint %></p><% } %>
+    <a class="btn primary" href="/">Go to overview</a>
+  </div>
+</div>
+</body>
+</html>

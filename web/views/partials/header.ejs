@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> | ThreatVault</title>
+  <link rel="preload" href="/fonts/space-grotesk-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="/"><%- include('brand') %>ThreatVault</a>
+    <nav class="mainnav" aria-label="Main">
+      <% const links = [['/', 'Overview', 'radar'], ['/incidents', 'Incidents', 'shield-alert'], ['/logs', 'Logs', 'scroll-text'], ['/blocklist', 'Blocklist', 'ban'], ['/reports', 'Reports', 'chart-column'], ['/audit', 'Audit', 'file-search'], ['/concepts', 'Course map', 'graduation-cap']];
+         if (user && user.role === 'ADMIN') links.push(['/admin', 'Admin', 'settings']);
+         links.forEach(function (l) {
+           const active = l[0] === '/' ? path === '/' : path.indexOf(l[0]) === 0; %>
+        <a href="<%= l[0] %>" class="<%= active ? 'active' : '' %>"<%- active ? ' aria-current="page"' : '' %>><%- icon(l[2]) %><%= l[1] %></a>
+      <% }) %>
+    </nav>
+    <div class="me">
+      <span class="avatar"><%= user.name.charAt(0) %></span>
+      <span class="who"><strong><%= user.name %></strong><%= user.role === 'ADMIN' ? 'Admin' : 'Analyst' %></span>
+      <a href="/logout" class="icon-btn" title="Log out" aria-label="Log out"><%- icon('log-out') %></a>
+    </div>
+  </div>
+</header>
+<main<%- (typeof full !== 'undefined' && full) ? '' : ' class="page"' %>>
+<% if (flash && !(typeof full !== 'undefined' && full)) { %>
+  <div class="flash <%= flash.type %>"><%- icon(flash.type === 'ok' ? 'circle-check' : 'triangle-alert') %><span><%= flash.text %></span></div>
+<% } %>

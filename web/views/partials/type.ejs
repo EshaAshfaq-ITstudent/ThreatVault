@@ -1,0 +1,1 @@
+<% const ti = { BRUTEFORCE: 'key-round', DDOS: 'zap', MALWARE: 'bug', PHISHING: 'fish-symbol' }; %><span class="type type-<%= (t || '').toLowerCase() %>"><%- icon(ti[t] || 'shield') %><%= ({ DDOS: 'DDoS', BRUTEFORCE: 'Brute force' })[t] || (t || '').charAt(0) + (t || '').slice(1).toLowerCase() %></span>

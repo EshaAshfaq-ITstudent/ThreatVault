@@ -1,0 +1,32 @@
+{
+  "name": "threatvault",
+  "version": "1.0.0",
+  "description": "ThreatVault: a security log and incident database (Oracle 21c XE) with a Node.js web dashboard",
+  "main": "web/server.js",
+  "scripts": {
+    "start": "node web/server.js",
+    "dev": "node --watch web/server.js",
+    "generate": "node tools/generate-logs.js",
+    "load": "node tools/load-logs.js",
+    "check": "node tools/check-connection.js"
+  },
+  "keywords": [
+    "oracle",
+    "dba",
+    "soc",
+    "security",
+    "partitioning",
+    "plsql"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "chart.js": "^4.4.1",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "lucide-static": "^1.70.0",
+    "oracledb": "^6.7.0"
+  }
+}

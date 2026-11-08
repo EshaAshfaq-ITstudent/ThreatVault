@@ -1,0 +1,113 @@
+<%- include('partials/header', { full: true }) %>
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <h1>Where attacks came from</h1>
+      <p>Suspicious events from the last <%= chart.trend.labels.length %> days across all three offices. Lines are drawn from each source country to Pakistan; thicker lines mean more events.</p>
+      <div class="hero-meta">Summary from <code>MV_DAILY_ATTACKS</code>, refreshed <%= mv ? fmt(mv.last_refresh_date) : 'never' %></div>
+      <% if (origins.length) { %>
+        <%- attackMap(origins) %>
+      <% } else { %>
+        <p class="hero-meta">No attack data yet. Load the logs, then refresh the summary on the Admin page.</p>
+      <% } %>
+    </div>
+    <aside class="sites">
+      <h3>Our three sites</h3>
+      <p class="hero-meta">Circle size shows suspicious events at each office.</p>
+      <%- siteMap(siteStats) %>
+      <ul class="site-rows">
+        <% [['KHI', 'Karachi'], ['LHR', 'Lahore'], ['ISB', 'Islamabad']].forEach(function (s) { const st = siteStats[s[0]]; %>
+          <li><span><strong><%= s[1] %></strong> <span class="muted"><%= s[0] %></span></span>
+              <span><span class="n"><%= num(st.events) %></span> events</span>
+              <span><a href="/incidents?site=<%= s[0] %>" style="color:#ffb19f"><%= st.open %> open</a></span></li>
+        <% }) %>
+      </ul>
+    </aside>
+  </div>
+</section>
+
+<section class="stats" aria-label="Key numbers">
+  <div class="stats-inner">
+    <a class="stat hot" href="/incidents"><span class="label"><%- icon('shield-alert') %>Open incidents</span><span class="value"><%= num(kpi.open_incidents) %></span></a>
+    <a class="stat hot" href="/incidents"><span class="label"><%- icon('flame') %>Critical, still open</span><span class="value"><%= num(kpi.critical_open) %></span></a>
+    <a class="stat warm" href="/incidents"><span class="label"><%- icon('clock') %>Past their SLA</span><span class="value"><%= num(kpi.overdue) %></span></a>
+    <a class="stat" href="/blocklist"><span class="label"><%- icon('ban') %>Blocked IPs</span><span class="value"><%= num(kpi.blocked) %></span></a>
+    <a class="stat" href="/logs"><span class="label"><%- icon('database') %>Log events stored</span><span class="value"><%= num(kpi.total_events) %></span></a>
+    <a class="stat" href="/reports?r=cube"><span class="label"><%- icon('activity') %>Suspicious events</span><span class="value"><%= num(kpi.suspicious_events) %></span></a>
+  </div>
+</section>
+
+<div class="dash">
+  <% if (flash) { %><div class="flash <%= flash.type %>"><%- icon(flash.type === 'ok' ? 'circle-check' : 'triangle-alert') %><span><%= flash.text %></span></div><% } %>
+
+  <section class="grid main-side">
+    <div class="panel">
+      <div class="panel-head"><h3>Suspicious events per day</h3><span class="muted small">by event type</span></div>
+      <div class="chart-box tall"><canvas id="trend" aria-label="Suspicious events per day"></canvas></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>Incidents by type</h3><span class="muted small">object subtypes</span></div>
+      <div class="donut-wrap chart-box">
+        <canvas id="types" aria-label="Incidents by type"></canvas>
+        <div class="donut-center"><div><strong><%= chart.byType.data.reduce(function (a, b) { return a + b; }, 0) %></strong><span>incidents</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid main-side">
+    <div class="panel">
+      <div class="panel-head"><h3>When attacks happen</h3><span class="muted small">suspicious events by hour of day</span></div>
+      <% if (!heat.days.length) { %>
+        <p class="empty">No events in the last 14 days.</p>
+      <% } else { %>
+      <div class="heat" role="img" aria-label="Heat map of suspicious events by day and hour">
+        <span></span>
+        <% for (let h = 0; h < 24; h++) { %><span class="hour"><%= h % 3 === 0 ? String(h).padStart(2, '0') : '' %></span><% } %>
+        <% heat.days.forEach(function (d) { %>
+          <span class="day"><%= d.slice(5) %></span>
+          <% for (let h = 0; h < 24; h++) {
+               const c = heat.cell[d + '|' + h] || 0;
+               const t = c / heat.max;
+               const bg = c === 0 ? '' : 'background:rgba(255,90,54,' + (0.12 + 0.88 * t).toFixed(2) + ')'; %>
+            <span class="cell" style="<%= bg %>" title="<%= d %> <%= String(h).padStart(2, '0') %>:00, <%= c %> events"></span>
+          <% } %>
+        <% }) %>
+      </div>
+      <div class="heat-legend">Fewer <i></i> More</div>
+      <% } %>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>Top source countries</h3><span class="muted small">excluding Pakistan</span></div>
+      <div class="chart-box tall"><canvas id="countries" aria-label="Top source countries"></canvas></div>
+    </div>
+  </section>
+
+  <section class="panel flush">
+    <div class="panel-head pad"><h3>Latest incidents</h3><a href="/incidents" class="btn small">View all incidents</a></div>
+    <% if (!recent.length) { %>
+      <p class="empty"><%- icon('radar') %>No incidents yet. Load the logs, then run detection on the Admin page.</p>
+    <% } else { %>
+    <table>
+      <thead><tr><th>Ticket</th><th>Type</th><th>Site</th><th>Source IP</th><th>Severity</th><th>Status</th><th>Opened</th></tr></thead>
+      <tbody>
+      <% recent.forEach(function (r) { %>
+        <tr class="link-row" onclick="location.href='/incidents/<%= r.incident_id %>'">
+          <td><a class="mono" href="/incidents/<%= r.incident_id %>"><%= r.ticket_no %></a></td>
+          <td><%- include('partials/type', { t: r.type_name }) %></td>
+          <td><%= r.site_code %></td>
+          <td class="mono"><%= r.src_ip %></td>
+          <td><%- include('partials/sev', { s: r.severity }) %></td>
+          <td><%- include('partials/status', { st: r.status }) %></td>
+          <td><%= fmt(r.opened_at) %></td>
+        </tr>
+      <% }) %>
+      </tbody>
+    </table>
+    <% } %>
+  </section>
+</div>
+
+<script src="/vendor/chart.umd.js"></script>
+<script>window.CHART = <%- JSON.stringify(chart).replace(/</g, '\\u003c') %>;</script>
+<script src="/js/dashboard.js"></script>
+<%- include('partials/footer') %>

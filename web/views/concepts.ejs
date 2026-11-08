@@ -1,0 +1,33 @@
+<%- include('partials/header') %>
+<header class="page-head">
+  <div>
+    <h1><%- icon('graduation-cap', 'head-ico') %>Course map</h1>
+    <p class="muted">Where every lab topic of ITL 327 lives in ThreatVault. Use this page during the presentation.</p>
+  </div>
+</header>
+
+<% const rows = [
+  ['1', 'Relational set operators', 'INTERSECT, MINUS and UNION across site fragments', 'Reports page (first three reports)', 'sql/08_reports.sql'],
+  ['2', 'Fragmentation, allocation, replication', 'LOG_EVENT split by site (one schema each). DETECTION_RULE and BLOCKLIST copied to every site', 'Logs page (site filter), Blocklist and Admin replication status', 'sql/01_site_schema.sql, sql/04_links_and_views.sql'],
+  ['3, 4', 'Data extraction and loading', 'CSV logs loaded with SQL*Loader; external table reads a CSV directly', 'Logs page shows the loaded rows', 'sql/loader/log_event.ctl, scripts/load_logs.bat, sql/extras/13_external_table.sql'],
+  ['5', 'Export and import', 'Data Pump export and import of each site table', 'Scripts only', 'scripts/export_logs.bat, scripts/import_logs.bat'],
+  ['6', 'SQL for summarized data', 'ROLLUP, CUBE and GROUPING SETS', 'Reports page', 'sql/08_reports.sql'],
+  ['7', 'Partitioned tables and materialized views', 'LOG_EVENT interval partitioned by day; MV_DAILY_ATTACKS summary', 'Logs page (one day = one partition), Dashboard, Admin partitions', 'sql/01_site_schema.sql, sql/07_mview.sql, sql/extras/11_partition_demo.sql'],
+  ['9', 'Packages', 'PKG_SOC: open, assign, close, block, detect, sync, refresh', 'Every button in the app', 'sql/05_package.sql'],
+  ['10', 'Objects, member methods, overloading', 'incident_t with risk_score() and risk_score(criticality)', 'Incident page, Reports (methods)', 'sql/03_object_types.sql'],
+  ['11', 'Inheritance, overriding, abstraction', 'NOT INSTANTIABLE incident_t; phishing_t, malware_t, bruteforce_t, ddos_t override risk_score', 'Incidents page (type and risk), Reports (TREAT)', 'sql/03_object_types.sql'],
+  ['12', 'Types of methods', 'Member, static (new_ticket_no) and overridden methods', 'Ticket numbers, Incident page', 'sql/03_object_types.sql'],
+  ['13', 'Transactions', 'close_incident uses SAVEPOINT and ROLLBACK; block_ip is one distributed transaction', 'Incident page: close with "simulate a failure"', 'sql/05_package.sql, sql/extras/14_transaction_demo.sql'],
+  ['14', 'Database and application auditing', 'Unified audit policy plus audit triggers', 'Audit page, Admin audit demo', 'sql/06_triggers.sql, sql/09_audit_policy.sql'],
+]; %>
+<section class="panel flush">
+  <table>
+    <thead><tr><th>Lab</th><th>Topic</th><th>How ThreatVault uses it</th><th>Show it in the app</th><th>Files</th></tr></thead>
+    <tbody>
+    <% rows.forEach(function (r) { %>
+      <tr><td><strong><%= r[0] %></strong></td><td><%= r[1] %></td><td><%= r[2] %></td><td><%= r[3] %></td><td class="mono small"><%= r[4] %></td></tr>
+    <% }) %>
+    </tbody>
+  </table>
+</section>
+<%- include('partials/footer') %>

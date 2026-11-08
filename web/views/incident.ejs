@@ -1,0 +1,108 @@
+<%- include('partials/header') %>
+<header class="page-head">
+  <div>
+    <a href="/incidents" class="back"><%- icon('arrow-left') %>All incidents</a>
+    <h1><%- icon(({ BRUTEFORCE: 'key-round', DDOS: 'zap', MALWARE: 'bug', PHISHING: 'fish-symbol' })[inc.type_name] || 'shield', 'head-ico') %><span class="mono" style="font-size:inherit"><%= inc.ticket_no %></span></h1>
+    <p class="lead"><%= inc.details %></p>
+  </div>
+  <div class="head-badges">
+    <%- include('partials/sev', { s: inc.severity }) %>
+    <%- include('partials/type', { t: inc.type_name }) %>
+    <%- include('partials/status', { st: inc.status }) %>
+    <% if (inc.overdue === 'YES') { %><span class="badge sev-high">Overdue</span><% } %>
+  </div>
+</header>
+
+<section class="grid three">
+  <div class="panel">
+    <h3><%- icon('gauge') %> Risk score</h3>
+    <div class="big-num"><%= inc.risk %><small>/100</small></div>
+    <dl class="facts">
+      <dt>risk_score()</dt><dd><%= inc.base_risk %> <small class="muted">overridden in <%= inc.type_name.toLowerCase() %>_t</small></dd>
+      <dt>risk_score(<%= inc.criticality %>)</dt><dd><%= inc.risk %> <small class="muted">overloaded, uses asset criticality</small></dd>
+      <dt>sla_hours()</dt><dd><%= inc.sla_hours %> hours</dd>
+      <dt>is_overdue()</dt><dd><%= inc.overdue %></dd>
+    </dl>
+  </div>
+  <div class="panel">
+    <h3><%- icon('map-pin') %> Where</h3>
+    <dl class="facts">
+      <dt>Site</dt><dd><%= inc.site_code %></dd>
+      <dt>Asset</dt><dd><%= inc.hostname %> (<%= inc.asset_type %>)</dd>
+      <dt>Criticality</dt><dd><%= inc.criticality %> of 5</dd>
+      <dt>Source IP</dt><dd class="mono"><%= inc.src_ip %>
+        <% if (inc.blocked === 'Y') { %><span class="badge sev-critical">Blocked</span><% } else { %>
+        <a class="btn tiny ghost" href="/blocklist?ip=<%= inc.src_ip %>">Block</a><% } %></dd>
+      <dt>Rule</dt><dd><%= inc.rule_name %> (threshold <%= inc.threshold %>)</dd>
+    </dl>
+  </div>
+  <div class="panel">
+    <h3><%- icon('clock') %> When</h3>
+    <dl class="facts">
+      <dt>Attack hour</dt><dd><%= fmt(inc.first_seen) %></dd>
+      <dt>Opened</dt><dd><%= fmt(inc.opened_at) %></dd>
+      <dt>Closed</dt><dd><%= inc.closed_at ? fmt(inc.closed_at) : 'not yet' %></dd>
+      <dt>Analyst</dt><dd><%= inc.analyst_name || 'not assigned' %></dd>
+    </dl>
+  </div>
+</section>
+
+<% if (inc.status !== 'CLOSED') { %>
+<section class="grid three">
+  <form class="panel" method="post" action="/incidents/<%= inc.incident_id %>/assign">
+    <h3><%- icon('user-round') %> Assign analyst</h3>
+    <p class="muted small">Calls <code>pkg_soc.assign_analyst</code></p>
+    <select name="analyst_id">
+      <% analysts.forEach(function (a) { %>
+        <option value="<%= a.analyst_id %>" <%= a.analyst_id === inc.analyst_id ? 'selected' : '' %>><%= a.full_name %> (<%= a.shift.toLowerCase() %>)</option>
+      <% }) %>
+    </select>
+    <button class="btn">Assign</button>
+  </form>
+
+  <form class="panel" method="post" action="/incidents/<%= inc.incident_id %>/note">
+    <h3><%- icon('notebook-pen') %> Add a note</h3>
+    <p class="muted small">Calls <code>pkg_soc.add_action</code></p>
+    <textarea name="text" rows="3" placeholder="What did you check or do?"></textarea>
+    <button class="btn">Save note</button>
+  </form>
+
+  <form class="panel accent" method="post" action="/incidents/<%= inc.incident_id %>/close">
+    <h3><%- icon('circle-check') %> Close incident</h3>
+    <p class="muted small">One transaction in <code>pkg_soc.close_incident</code>: save action, block IP at all sites, close.</p>
+    <textarea name="text" rows="2" placeholder="Final action taken">Investigated and resolved.</textarea>
+    <label class="check"><input type="checkbox" name="block" value="Y" <%= inc.blocked === 'Y' ? '' : 'checked' %>> Block <%= inc.src_ip %> at all sites</label>
+    <label class="check demo"><input type="checkbox" name="simulate" value="Y"> Demo: simulate a failure (shows ROLLBACK)</label>
+    <button class="btn primary">Close incident</button>
+  </form>
+</section>
+<% } %>
+
+<section class="grid two">
+  <div class="panel">
+    <h3><%- icon('history') %> Response timeline</h3>
+    <% if (!actions.length) { %><p class="empty">No actions yet.</p><% } %>
+    <ul class="timeline">
+      <% actions.forEach(function (a) { %>
+        <li><span class="when"><%= fmt(a.action_time) %></span>
+            <span class="who"><%= a.full_name || 'System' %></span>
+            <span><%= a.action_text %></span></li>
+      <% }) %>
+    </ul>
+  </div>
+  <div class="panel flush">
+    <h3 class="pad">Evidence from <code><%= inc.site_code.toLowerCase() %>_logs</code> (that hour)</h3>
+    <table class="dense">
+      <thead><tr><th>Time</th><th>Event</th><th>Action</th><th>Port</th><th>User / detail</th></tr></thead>
+      <tbody>
+      <% evidence.forEach(function (e) { %>
+        <tr><td class="mono"><%= fmt(e.event_time) %></td>
+            <td><span class="ev ev-<%= e.event_type.toLowerCase() %>"><%= e.event_type %></span></td>
+            <td><%= e.action %></td><td><%= e.dst_port %></td>
+            <td class="trunc"><%= e.username %> <%= e.detail %></td></tr>
+      <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+<%- include('partials/footer') %>

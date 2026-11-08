@@ -1,0 +1,54 @@
+<%- include('partials/header') %>
+<header class="page-head">
+  <div>
+    <h1><%- icon('ban', 'head-ico') %>Blocklist</h1>
+    <p class="muted">Central table <code>BLOCKLIST</code> is replicated to <code>BLOCKLIST_COPY</code> at every site inside one distributed transaction.</p>
+  </div>
+</header>
+
+<section class="grid two">
+  <div class="panel">
+    <h3><%- icon('share-2') %> Replication status</h3>
+    <div class="rep">
+      <div><span>Central</span><strong><%= rep.central %></strong></div>
+      <div class="<%= rep.khi === rep.central ? 'ok' : 'bad' %>"><span>Karachi copy</span><strong><%= rep.khi %></strong></div>
+      <div class="<%= rep.lhr === rep.central ? 'ok' : 'bad' %>"><span>Lahore copy</span><strong><%= rep.lhr %></strong></div>
+      <div class="<%= rep.isb === rep.central ? 'ok' : 'bad' %>"><span>Islamabad copy</span><strong><%= rep.isb %></strong></div>
+    </div>
+    <p class="muted small">Green means the site copy has the same number of rows as central.</p>
+  </div>
+  <form class="panel" method="post" action="/blocklist">
+    <h3><%- icon('ban') %> Block an IP</h3>
+    <p class="muted small">Calls <code>pkg_soc.block_ip</code></p>
+    <div class="row">
+      <input name="ip" placeholder="IP address" value="<%= ipPrefill %>" required>
+      <input name="reason" placeholder="Reason" value="Blocked manually by analyst">
+      <button class="btn danger">Block IP</button>
+    </div>
+  </form>
+</section>
+
+<section class="panel flush">
+  <% if (!rows.length) { %>
+    <p class="empty">No blocked IPs yet.</p>
+  <% } else { %>
+  <table>
+    <thead><tr><th>IP</th><th>Reason</th><th>Incidents</th><th>Added by</th><th>Added on</th><% if (user.role === 'ADMIN') { %><th></th><% } %></tr></thead>
+    <tbody>
+    <% rows.forEach(function (r) { %>
+      <tr>
+        <td class="mono"><a href="/incidents?status=ALL&q=<%= r.ip %>"><%= r.ip %></a></td>
+        <td><%= r.reason %></td>
+        <td><%= r.incidents %></td>
+        <td><%= r.added_by || '' %></td>
+        <td><%= fmt(r.added_on) %></td>
+        <% if (user.role === 'ADMIN') { %>
+        <td><form method="post" action="/blocklist/remove"><input type="hidden" name="ip" value="<%= r.ip %>"><button class="btn tiny ghost">Unblock</button></form></td>
+        <% } %>
+      </tr>
+    <% }) %>
+    </tbody>
+  </table>
+  <% } %>
+</section>
+<%- include('partials/footer') %>

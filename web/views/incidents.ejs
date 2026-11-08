@@ -1,0 +1,58 @@
+<%- include('partials/header') %>
+<header class="page-head">
+  <div>
+    <h1><%- icon('shield-alert', 'head-ico') %>Incidents</h1>
+    <p class="muted">Stored in the object table <code>INCIDENTS</code>. Type, risk and overdue come from member methods of each subtype.</p>
+  </div>
+</header>
+
+<form class="filters" method="get" action="/incidents">
+  <label>Status
+    <select name="status">
+      <option value="ACTIVE" <%= f.status === 'ACTIVE' ? 'selected' : '' %>>Open and assigned</option>
+      <% STATUSES.forEach(function (s) { %><option <%= f.status === s ? 'selected' : '' %>><%= s %></option><% }) %>
+      <option value="ALL" <%= f.status === 'ALL' ? 'selected' : '' %>>All</option>
+    </select>
+  </label>
+  <label>Type
+    <select name="type">
+      <option value="">Any</option>
+      <% TYPES.forEach(function (t) { %><option <%= f.type === t ? 'selected' : '' %>><%= t %></option><% }) %>
+    </select>
+  </label>
+  <label>Site
+    <select name="site">
+      <option value="">All</option>
+      <% SITES.forEach(function (s) { %><option <%= f.site === s ? 'selected' : '' %>><%= s %></option><% }) %>
+    </select>
+  </label>
+  <label>IP or ticket<input name="q" value="<%= f.q %>"></label>
+  <button class="btn primary"><%- icon('filter') %>Filter</button>
+</form>
+
+<section class="panel flush">
+  <% if (!rows.length) { %>
+    <p class="empty">No incidents match. If this is a fresh install, run detection from the Admin page.</p>
+  <% } else { %>
+  <table>
+    <thead><tr><th>Ticket</th><th>Type</th><th>Site</th><th>Source IP</th><th>Severity</th><th>Risk</th><th>Status</th><th>Analyst</th><th>Attack hour</th></tr></thead>
+    <tbody>
+    <% rows.forEach(function (r) { %>
+      <tr class="link-row" onclick="location.href='/incidents/<%= r.incident_id %>'">
+        <td><a class="mono" href="/incidents/<%= r.incident_id %>"><%= r.ticket_no %></a>
+          <% if (r.overdue === 'YES') { %><span class="badge sev-high" title="Past its SLA hours">Overdue</span><% } %></td>
+        <td><%- include('partials/type', { t: r.type_name }) %></td>
+        <td><%= r.site_code %></td>
+        <td class="mono"><%= r.src_ip %></td>
+        <td><%- include('partials/sev', { s: r.severity }) %></td>
+        <td><div class="risk"><span><%= r.risk %></span><div class="bar"><div style="width: <%= Math.min(100, r.risk) %>%"></div></div></div></td>
+        <td><%- include('partials/status', { st: r.status }) %></td>
+        <td><%= r.analyst || '' %></td>
+        <td><%= fmt(r.first_seen) %></td>
+      </tr>
+    <% }) %>
+    </tbody>
+  </table>
+  <% } %>
+</section>
+<%- include('partials/footer') %>
