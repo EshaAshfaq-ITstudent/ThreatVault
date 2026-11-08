@@ -4,11 +4,11 @@
 
 Database Administration and Management Lab (ITL 327), BS IT 7th Semester, Fall 2026, Bahria University Karachi.
 
-| Member | Enrollment |
-| --- | --- |
-| Esha Ashfaq | 02-235232-002 |
-| Maham Imran | 02-235232-030 |
-| Mujtaba | 02-235232-048 |
+| Member | 
+| --- |
+| Esha Ashfaq |
+| Maham Imran | 
+| Mujtaba | 
 
 ---
 
